@@ -1,5 +1,6 @@
 import {
   createChart,
+  CandlestickSeries,
 } from "lightweight-charts";
 
 import {
@@ -12,12 +13,15 @@ export default function Chart({
   liveCandle,
 }) {
   const chartContainerRef =
-    useRef();
+    useRef(null);
 
   const seriesRef =
-    useRef();
+    useRef(null);
 
   useEffect(() => {
+    if (!chartContainerRef.current)
+      return;
+
     const chart =
       createChart(
         chartContainerRef.current,
@@ -28,7 +32,9 @@ export default function Chart({
       );
 
     const candleSeries =
-      chart.addCandlestickSeries();
+      chart.addSeries(
+        CandlestickSeries
+      );
 
     seriesRef.current =
       candleSeries;
@@ -38,10 +44,13 @@ export default function Chart({
         time:
           c.timestamp / 1000,
 
-        open: c.open,
-        high: c.high,
-        low: c.low,
-        close: c.close,
+        open: Number(c.open),
+
+        high: Number(c.high),
+
+        low: Number(c.low),
+
+        close: Number(c.close),
       }));
 
     candleSeries.setData(
@@ -63,17 +72,21 @@ export default function Chart({
           liveCandle.timestamp /
           1000,
 
-        open:
-          liveCandle.open,
+        open: Number(
+          liveCandle.open
+        ),
 
-        high:
-          liveCandle.high,
+        high: Number(
+          liveCandle.high
+        ),
 
-        low:
-          liveCandle.low,
+        low: Number(
+          liveCandle.low
+        ),
 
-        close:
-          liveCandle.close,
+        close: Number(
+          liveCandle.close
+        ),
       });
     }
   }, [liveCandle]);
