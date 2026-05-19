@@ -9,13 +9,9 @@ import {
 } from "react";
 
 export default function Chart({
-  candles,
-  liveCandle,
+  candles = [],
 }) {
   const chartContainerRef =
-    useRef(null);
-
-  const seriesRef =
     useRef(null);
 
   useEffect(() => {
@@ -26,8 +22,29 @@ export default function Chart({
       createChart(
         chartContainerRef.current,
         {
-          width: 900,
+          width:
+            chartContainerRef.current
+              .clientWidth || 900,
+
           height: 500,
+
+          layout: {
+            background: {
+              color: "#ffffff",
+            },
+
+            textColor: "#000",
+          },
+
+          grid: {
+            vertLines: {
+              color: "#eee",
+            },
+
+            horzLines: {
+              color: "#eee",
+            },
+          },
         }
       );
 
@@ -36,13 +53,11 @@ export default function Chart({
         CandlestickSeries
       );
 
-    seriesRef.current =
-      candleSeries;
-
-    const formatted =
+    const formattedCandles =
       candles.map((c) => ({
-        time:
-          c.timestamp / 1000,
+        time: Math.floor(
+          c.timestamp / 1000
+        ),
 
         open: Number(c.open),
 
@@ -54,46 +69,41 @@ export default function Chart({
       }));
 
     candleSeries.setData(
-      formatted
+      formattedCandles
+    );
+
+    chart.timeScale().fitContent();
+
+    const handleResize = () => {
+      chart.applyOptions({
+        width:
+          chartContainerRef.current
+            .clientWidth,
+      });
+    };
+
+    window.addEventListener(
+      "resize",
+      handleResize
     );
 
     return () => {
+      window.removeEventListener(
+        "resize",
+        handleResize
+      );
+
       chart.remove();
     };
   }, [candles]);
 
-  useEffect(() => {
-    if (
-      liveCandle &&
-      seriesRef.current
-    ) {
-      seriesRef.current.update({
-        time:
-          liveCandle.timestamp /
-          1000,
-
-        open: Number(
-          liveCandle.open
-        ),
-
-        high: Number(
-          liveCandle.high
-        ),
-
-        low: Number(
-          liveCandle.low
-        ),
-
-        close: Number(
-          liveCandle.close
-        ),
-      });
-    }
-  }, [liveCandle]);
-
   return (
     <div
       ref={chartContainerRef}
+      style={{
+        width: "100%",
+        height: "500px",
+      }}
     />
   );
 }
