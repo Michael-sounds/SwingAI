@@ -9,16 +9,21 @@ const cors =
 const http =
   require("http");
 
+const mongoose =
+  require("mongoose");
+
 const { Server } =
   require("socket.io");
 
-const mongoose =
-  require("mongoose");
+const authRoutes =
+  require("./routes/authRoutes");
 
 const app = express();
 
 const server =
   http.createServer(app);
+
+/* ---------------- SOCKET.IO ---------------- */
 
 const io = new Server(server, {
   cors: {
@@ -27,8 +32,7 @@ const io = new Server(server, {
   },
 });
 
-const PORT =
-  process.env.PORT || 5000;
+/* ---------------- MIDDLEWARE ---------------- */
 
 app.use(cors());
 
@@ -50,7 +54,14 @@ mongoose
     );
   });
 
-/* ---------------- TEST ROUTE ---------------- */
+/* ---------------- ROUTES ---------------- */
+
+app.use(
+  "/api/auth",
+  authRoutes
+);
+
+/* ---------------- HOME ---------------- */
 
 app.get("/", (req, res) => {
   res.send(
@@ -58,7 +69,7 @@ app.get("/", (req, res) => {
   );
 });
 
-/* ---------------- API ROUTES ---------------- */
+/* ---------------- CANDLES ---------------- */
 
 app.get(
   "/api/candles",
@@ -66,7 +77,8 @@ app.get(
     const candles = [
       {
         timestamp:
-          Date.now() - 60000 * 4,
+          Date.now() -
+          60000 * 4,
 
         open: 105000,
 
@@ -79,7 +91,8 @@ app.get(
 
       {
         timestamp:
-          Date.now() - 60000 * 3,
+          Date.now() -
+          60000 * 3,
 
         open: 105500,
 
@@ -92,7 +105,8 @@ app.get(
 
       {
         timestamp:
-          Date.now() - 60000 * 2,
+          Date.now() -
+          60000 * 2,
 
         open: 106200,
 
@@ -105,7 +119,8 @@ app.get(
 
       {
         timestamp:
-          Date.now() - 60000,
+          Date.now() -
+          60000,
 
         open: 106800,
 
@@ -136,6 +151,8 @@ app.get(
   }
 );
 
+/* ---------------- SWEEPS ---------------- */
+
 app.get(
   "/api/sweeps",
   (req, res) => {
@@ -145,18 +162,24 @@ app.get(
   }
 );
 
+/* ---------------- SCANNER ---------------- */
+
 app.get(
   "/api/scanner",
   (req, res) => {
     res.json({
       markets: [
         {
-          symbol: "BTCUSDT",
+          symbol:
+            "BTCUSDT",
+
           signal: "BUY",
         },
 
         {
-          symbol: "ETHUSDT",
+          symbol:
+            "ETHUSDT",
+
           signal: "SELL",
         },
       ],
@@ -164,7 +187,7 @@ app.get(
   }
 );
 
-/* ---------------- SOCKET.IO ---------------- */
+/* ---------------- SOCKET CONNECTION ---------------- */
 
 io.on(
   "connection",
@@ -185,6 +208,9 @@ io.on(
 );
 
 /* ---------------- SERVER ---------------- */
+
+const PORT =
+  process.env.PORT || 5000;
 
 server.listen(PORT, () => {
   console.log(
