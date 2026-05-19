@@ -3,119 +3,77 @@ import {
   useState,
 } from "react";
 
+import Login from "./components/Login";
+
 import Chart from "./components/Chart";
-
-import Scanner from "./components/Scanner";
-
-import SymbolSelector from "./components/SymbolSelector";
-
-import TimeframeSelector from "./components/TimeframeSelector";
 
 import {
   fetchCandles,
-  fetchScanner,
-} from "./services/api";
+} from "./api.js";
 
-import socket from "./socket";
+import "./app.css";
 
 export default function App() {
+  const [loggedIn, setLoggedIn] =
+    useState(false);
+
   const [candles, setCandles] =
     useState([]);
 
-  const [markets, setMarkets] =
-    useState([]);
+  useEffect(() => {
+    const access =
+      localStorage.getItem(
+        "swingai_access"
+      );
 
-  const [symbol, setSymbol] =
-    useState("BTCUSDT");
-
-  const [
-    timeframe,
-    setTimeframe,
-  ] = useState("1m");
-
-  const [
-    liveCandle,
-    setLiveCandle,
-  ] = useState(null);
-
-  async function loadData() {
-    try {
-      const candleData =
-        await fetchCandles(
-          symbol,
-          timeframe
-        );
-
-      const scannerData =
-        await fetchScanner(
-          timeframe
-        );
-
-      setCandles(candleData);
-
-      setMarkets(scannerData);
-    } catch (err) {
-      console.error(err);
+    if (access === "true") {
+      setLoggedIn(true);
     }
-  }
+  }, []);
 
   useEffect(() => {
-    loadData();
+    if (!loggedIn)
+      return;
 
-    socket.on(
-      "new_candle",
-      (candle) => {
-        if (
-          candle.symbol ===
-            symbol &&
-          candle.timeframe ===
-            timeframe
-        ) {
-          setLiveCandle(
-            candle
+    async function loadData() {
+      try {
+        const data =
+          await fetchCandles(
+            "BTCUSDT",
+            "1m"
           );
-        }
-      }
-    );
 
-    return () => {
-      socket.off(
-        "new_candle"
-      );
-    };
-  }, [symbol, timeframe]);
+        setCandles(data);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+
+    loadData();
+  }, [loggedIn]);
+
+  if (!loggedIn) {
+    return (
+      <Login
+        onLoginSuccess={() =>
+          setLoggedIn(true)
+        }
+      />
+    );
+  }
 
   return (
     <div
       style={{
-        padding: 20,
+        padding: "20px",
       }}
     >
       <h1>
-        MARKET DASHBOARD
+        Market Dashboard
       </h1>
-
-      <SymbolSelector
-        symbol={symbol}
-        setSymbol={setSymbol}
-      />
-
-      <TimeframeSelector
-        timeframe={timeframe}
-        setTimeframe={
-          setTimeframe
-        }
-      />
 
       <Chart
         candles={candles}
-        liveCandle={
-          liveCandle
-        }
-      />
-
-      <Scanner
-        markets={markets}
       />
     </div>
   );
